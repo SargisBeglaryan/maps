@@ -1,0 +1,14 @@
+.mapDetailsContent {
+	background: #000;
+	height: 300px;
+	padding: 15px;
+}
+.dialog-title {
+	color: #fff;
+	text-align: center;
+	padding-top: 20px;
+	margin-top: 0px;
+}
+.dialog-info-text {
+	color: #fff;
+}
