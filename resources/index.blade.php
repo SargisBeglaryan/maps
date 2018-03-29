@@ -1,4 +1,4 @@
-@extends('templates.layouts.default')
+@extends('layout.default')
 
 @section('keywords'){{ 'Some kewords'}}@endsection
 
