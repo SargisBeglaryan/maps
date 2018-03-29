@@ -7,13 +7,13 @@
 <div class="container">
 	<h1 class="homePageTitle">Location Information</h1>
 	<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#mapModal">Add New</button>
-	<table class="table table-striped">
+	<table class="locations-table table table-striped">
     <thead>
       <tr>
-      	<th>Number</th>
-        <th>Firstname</th>
-        <th>Lastname</th>
-        <th>Email</th>
+        <th>Address</th>
+        <th>Area</th>
+        <th>Points Location</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -40,13 +40,12 @@
       					<input  id="pac-input" type="text" class="form-control">
       				</div>
               <div class="form-group">
-        				<button class="confirm-button btn btn-primary">Confirm Selection</button>
+        				<button class="confirm-button btn btn-primary disabled">Confirm Selection</button>
               </div>
               <div class="form-group">
-        				<button class="reset-button btn btn-danger">Reset Selection</button>
+        				<button class="reset-button btn btn-danger disabled">Reset Selection</button>
               </div>
       			</div>
-            <div id="info"></div>
         	</div>
         </div>
       </div>
