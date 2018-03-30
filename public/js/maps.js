@@ -3,13 +3,17 @@ var polygonArea;
 var editingPolygon;
 var address;
 var drawingManager = null;
-var autocomplete = null;
 var locationNumber;
 var currentLocation;
-var autocomplete;
 var defaultLocation = {lat: 40.237368, lng: 44.442798};
 var zoom = 8;
 $(document).ready(function(){
+
+    $('.add-new').on('click', function (){
+        if(currentLocation){
+          $(".reset-button").trigger("click");
+        }
+    });
 
    $('.confirm-button').on('click', function(){
     if(currentLocation){
@@ -45,6 +49,7 @@ $(document).ready(function(){
     defaultLocation = {lat: 40.237368, lng: 44.442798};
     editingPolygon = null;
     currentLocation = false;
+    polygonArea = null;
     zoom = 8;
     $('#pac-input').val('');
     $('.confirm-button').addClass('disabled').attr('disabled', true);
@@ -54,26 +59,26 @@ $(document).ready(function(){
   });
 
   $('.locations-table').on('click', '.editLocation', function (){
-    zoom = 1;
+    zoom = 4;
     currentLocation = $(this).data('number');
     var locationCordinates = [];
     polygonArea = $(this).closest('.locationRow').find('.polygonArea').html();
     $('#pac-input').val($(this).closest('.locationRow').find('.locationAddress').text());
     address = $(this).closest('.locationRow').find('.locationAddress').text();
-    var points = $(this).closest('.locationRow').find('.polygonPats').html().split('<br>');
-    points.pop();
-    for(let i = 0; i < points.length; i++){
-      var currentLatLng = points[i].split(',');
+    polygonPats = $(this).closest('.locationRow').find('.polygonPats').html().split('<br>');
+    polygonPats.pop();
+    for(let i = 0; i < polygonPats.length; i++){
+      var currentLatLng = polygonPats[i].split(',');
       locationCordinates.push({lat : parseFloat(currentLatLng[0]), lng: parseFloat(currentLatLng[1])});
 
     }
     defaultLocation = {lat: locationCordinates[0].lat, lng: locationCordinates[0].lng};
     editingPolygon = new google.maps.Polygon({
           paths: locationCordinates,
-          strokeColor: '#ffcc00',
+          strokeColor: '#000',
           strokeOpacity: 0.8,
           strokeWeight: 2,
-          fillColor: '##ffcc00',
+          fillColor: '#000',
           fillOpacity: 0.35
         });
       $('.confirm-button').removeClass('disabled').attr('disabled', false);
@@ -87,7 +92,7 @@ $(document).ready(function(){
 function initMap() {
   var map = new google.maps.Map(document.getElementById('map'), {
     center: defaultLocation,
-    zoom: 8
+    zoom: zoom
   });
   var input = document.getElementById('pac-input');
 
@@ -135,6 +140,7 @@ function initMap() {
   });
 
   if(editingPolygon){
+    polygonPats = [];
     var bounds = new google.maps.LatLngBounds();
     for (var i = 0; i < editingPolygon.getPath().getLength(); i++) {
         polygonPatString = editingPolygon.getPath().getAt(i).toUrlValue(6);
@@ -149,16 +155,11 @@ function initMap() {
   }
 
   drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: google.maps.drawing.OverlayType.MARKER,
+      drawingMode: google.maps.drawing.OverlayType.POLYGON,
       drawingControl: true,
       drawingControlOptions: {
         position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: ['polygon'],
-        strokeColor: '#ffcc00',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: '##ffcc00',
-        fillOpacity: 0.35
+        drawingModes: ['polygon']
       }
     });
   google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
