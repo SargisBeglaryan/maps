@@ -6,7 +6,7 @@
 
 <div class="container">
 	<h1 class="homePageTitle">Location Information</h1>
-	<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#mapModal">Add New</button>
+	<button type="button" class="add-new btn btn-primary" data-toggle="modal" data-target="#mapModal">Add New</button>
 	<table class="locations-table table table-striped">
     <thead>
       <tr>
