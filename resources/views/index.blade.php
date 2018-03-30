@@ -40,10 +40,10 @@
       					<input  id="pac-input" type="text" class="form-control">
       				</div>
               <div class="form-group">
-        				<button class="confirm-button btn btn-primary disabled">Confirm Selection</button>
+        				<button class="confirm-button btn btn-primary disabled" disabled>Confirm Selection</button>
               </div>
               <div class="form-group">
-        				<button class="reset-button btn btn-danger disabled">Reset Selection</button>
+        				<button class="reset-button btn btn-danger disabled" disabled>Reset Selection</button>
               </div>
       			</div>
         	</div>

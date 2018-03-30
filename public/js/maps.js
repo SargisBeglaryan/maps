@@ -1,11 +1,14 @@
 var polygonPats = [];
 var polygonArea;
-var polygon;
+var editingPolygon;
 var address;
 var drawingManager = null;
 var autocomplete = null;
 var locationNumber;
 var currentLocation;
+var autocomplete;
+var defaultLocation = {lat: 40.237368, lng: 44.442798};
+var zoom = 8;
 $(document).ready(function(){
 
    $('.confirm-button').on('click', function(){
@@ -16,55 +19,75 @@ $(document).ready(function(){
     } else {
       locationNumber = 1;
     }
-    var tableRow = '<tr class="locationRow"><td>'+address+ '</td>';
-    tableRow += '<td>'+polygonArea+'m<sup>2</sup></td><td class="polygonPats">';
+    var allPointsString = '';
     for(let i = 0; i < polygonPats.length; i++){
-        tableRow += polygonPats[i] + '<br>';
+          allPointsString += polygonPats[i] + '<br>';
     }
-    tableRow += '</td><td><button data-number="'+locationNumber+'"  class="editLocation btn">Edit</button></td></tr>'
-    $('.locations-table tbody').append(tableRow);
+    if(currentLocation){
+      currentEditButton = $('.locations-table').find("[data-number='" + currentLocation + "']");
+      polygonArea = $(currentEditButton).closest('.locationRow').find('.polygonArea').html(polygonArea);
+      address = $(currentEditButton).closest('.locationRow').find('.locationAddress').text(address);
+      var points = $(currentEditButton).closest('.locationRow').find('.polygonPats').html(allPointsString);
+    } else {
+      var tableRow = '<tr class="locationRow"><td class="locationAddress">'+address+ '</td>';
+      tableRow += '<td class="polygonArea">'+polygonArea+'m<sup>2</sup></td><td class="polygonPats">';
+      tableRow += allPointsString;
+      tableRow += '</td><td><button data-number="'+locationNumber+'"  class="editLocation btn">Edit</button></td></tr>'
+      $('.locations-table tbody').append(tableRow);
+    }
     $('#mapModal').modal('hide');
     currentLocation = false;
+    $(".reset-button").trigger("click");
 
   });
 
   $('.reset-button').on('click', function(){
-
-    polygon.setMap(null);
-    $(this).addClass('disabled');
-    $('.confirm-button').addClass('disabled');
+    defaultLocation = {lat: 40.237368, lng: 44.442798};
+    editingPolygon = null;
+    currentLocation = false;
+    zoom = 8;
+    $('#pac-input').val('');
+    $('.confirm-button').addClass('disabled').attr('disabled', true);
+    $(this).addClass('disabled').attr('disabled', true);
+    initMap();
 
   });
 
   $('.locations-table').on('click', '.editLocation', function (){
+    zoom = 1;
     currentLocation = $(this).data('number');
     var locationCordinates = [];
-    var points = $(this).closest('.locationRow').find('.polygonPats').html().split('<br>','');
+    polygonArea = $(this).closest('.locationRow').find('.polygonArea').html();
+    $('#pac-input').val($(this).closest('.locationRow').find('.locationAddress').text());
+    address = $(this).closest('.locationRow').find('.locationAddress').text();
+    var points = $(this).closest('.locationRow').find('.polygonPats').html().split('<br>');
     points.pop();
     for(let i = 0; i < points.length; i++){
       var currentLatLng = points[i].split(',');
-      locationCordinates.push({lat : currentLatLng[0], lng: currentLatLng[1]});
+      locationCordinates.push({lat : parseFloat(currentLatLng[0]), lng: parseFloat(currentLatLng[1])});
 
     }
-    polygon = new google.maps.Polygon({
+    defaultLocation = {lat: locationCordinates[0].lat, lng: locationCordinates[0].lng};
+    editingPolygon = new google.maps.Polygon({
           paths: locationCordinates,
-          strokeColor: '#fff',
+          strokeColor: '#ffcc00',
           strokeOpacity: 0.8,
           strokeWeight: 2,
-          fillColor: '#fff',
+          fillColor: '##ffcc00',
           fillOpacity: 0.35
         });
-      polygon.setMap(map);
+      $('.confirm-button').removeClass('disabled').attr('disabled', false);
+      $('.reset-button').removeClass('disabled').attr('disabled', false);
       $('#mapModal').modal('show');
+      initMap();
   });
-  
-  
+
 });
 
 function initMap() {
   var map = new google.maps.Map(document.getElementById('map'), {
-    center: {lat: -33.8688, lng: 151.2195},
-    zoom: 13
+    center: defaultLocation,
+    zoom: 8
   });
   var input = document.getElementById('pac-input');
 
@@ -103,60 +126,57 @@ function initMap() {
       ].join(' ');
     }
 
-    if(drawingManager == null){
-        drawingManager = new google.maps.drawing.DrawingManager({
-        drawingMode: google.maps.drawing.OverlayType.MARKER,
-        drawingControl: true,
-        drawingControlOptions: {
-          position: google.maps.ControlPosition.TOP_CENTER,
-          drawingModes: ['polygon']
-        }
-      });
-    }
+    if(drawingManager.drawingControl == false){
+        drawingManager.drawingControl = true;
+    };
     drawingManager.setMap(map);
-    changeButtonDisabled('reset-button');
-    
+    $('.confirm-button').addClass('disabled').attr('disabled', true);
+    $('.reset-button').removeClass('disabled').attr('disabled', false);
   });
+
+  if(editingPolygon){
+    var bounds = new google.maps.LatLngBounds();
+    for (var i = 0; i < editingPolygon.getPath().getLength(); i++) {
+        polygonPatString = editingPolygon.getPath().getAt(i).toUrlValue(6);
+        patLatLng = polygonPatString.split(",");
+        bounds.extend(new google.maps.LatLng(parseFloat(patLatLng[0]), parseFloat(patLatLng[1]))),
+        polygonPats.push(editingPolygon.getPath().getAt(i).toUrlValue(6));
+    }
+    infowindow.setPosition(bounds.getCenter());
+    infowindow.setContent(polygonArea);
+    infowindow.open(map, editingPolygon);
+    editingPolygon.setMap(map);
+  }
+
   drawingManager = new google.maps.drawing.DrawingManager({
       drawingMode: google.maps.drawing.OverlayType.MARKER,
       drawingControl: true,
       drawingControlOptions: {
         position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: ['polygon']
+        drawingModes: ['polygon'],
+        strokeColor: '#ffcc00',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '##ffcc00',
+        fillOpacity: 0.35
       }
     });
   google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
+      editingPolygon = polygon;
+      polygonPats = [];
       var bounds = new google.maps.LatLngBounds();
-      for (var i = 0; i < polygon.getPath().getLength(); i++) {
-          polygonPatString = polygon.getPath().getAt(i).toUrlValue(6);
+      for (var i = 0; i < editingPolygon.getPath().getLength(); i++) {
+          polygonPatString = editingPolygon.getPath().getAt(i).toUrlValue(6);
           patLatLng = polygonPatString.split(",");
-          bounds.extend(new google.maps.LatLng(patLatLng[0], patLatLng[1])),
-          polygonPats.push(polygon.getPath().getAt(i).toUrlValue(6));
+          bounds.extend(new google.maps.LatLng(parseFloat(patLatLng[0]), parseFloat(patLatLng[1]))),
+          polygonPats.push(editingPolygon.getPath().getAt(i).toUrlValue(6));
       }
       drawingManager.setMap(null);
       drawingManager.drawingControl = null;
-      polygonArea = Math.round(google.maps.geometry.spherical.computeArea(polygon.getPath()));
+      polygonArea = Math.round(google.maps.geometry.spherical.computeArea(editingPolygon.getPath()));
       infowindow.setPosition(bounds.getCenter());
       infowindow.setContent(polygonArea+'m<sup>2</sup>');
-      infowindow.open(map, polygon);
-      changeButtonDisabled('confirm-button');
+      infowindow.open(map, editingPolygon);
+      $('.confirm-button').removeClass('disabled').attr('disabled', false);
   });
 }
-
-function changeButtonDisabled(buttonClass){
-  if($('.'+ buttonClass).hasClass('disabled')){
-    $('.'+ buttonClass).removeClass('disabled')
-  } else {
-    $('.'+ buttonClass).addClass('disabled')
-  }
-}
-// function createDrawObject(){
-//   drawingManager = new google.maps.drawing.DrawingManager({
-//       drawingMode: google.maps.drawing.OverlayType.MARKER,
-//       drawingControl: true,
-//       drawingControlOptions: {
-//         position: google.maps.ControlPosition.TOP_CENTER,
-//         drawingModes: ['polygon']
-//       }
-//     });
-// }
