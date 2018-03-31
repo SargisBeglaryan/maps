@@ -11,6 +11,7 @@ $(document).ready(function(){
 
     $('.add-new').on('click', function (){
         if(currentLocation){
+          currentLocation = null;
           $(".reset-button").trigger("click");
         }
     });
@@ -34,7 +35,7 @@ $(document).ready(function(){
       var points = $(currentEditButton).closest('.locationRow').find('.polygonPats').html(allPointsString);
     } else {
       var tableRow = '<tr class="locationRow"><td class="locationAddress">'+address+ '</td>';
-      tableRow += '<td class="polygonArea">'+polygonArea+'m<sup>2</sup></td><td class="polygonPats">';
+      tableRow += '<td class="polygonArea">'+polygonArea+'</td><td class="polygonPats">';
       tableRow += allPointsString;
       tableRow += '</td><td><button data-number="'+locationNumber+'"  class="editLocation btn">Edit</button></td></tr>'
       $('.locations-table tbody').append(tableRow);
@@ -48,7 +49,6 @@ $(document).ready(function(){
   $('.reset-button').on('click', function(){
     defaultLocation = {lat: 40.237368, lng: 44.442798};
     editingPolygon = null;
-    currentLocation = false;
     polygonArea = null;
     zoom = 8;
     $('#pac-input').val('');
@@ -131,6 +131,11 @@ function initMap() {
       ].join(' ');
     }
 
+    if(editingPolygon){
+      editingPolygon.setMap(null);
+      polygonArea = null;
+    }
+
     if(drawingManager.drawingControl == false){
         drawingManager.drawingControl = true;
     };
@@ -174,9 +179,9 @@ function initMap() {
       }
       drawingManager.setMap(null);
       drawingManager.drawingControl = null;
-      polygonArea = Math.round(google.maps.geometry.spherical.computeArea(editingPolygon.getPath()));
+      polygonArea = Math.round(google.maps.geometry.spherical.computeArea(editingPolygon.getPath())) + 'm<sup>2</sup>';
       infowindow.setPosition(bounds.getCenter());
-      infowindow.setContent(polygonArea+'m<sup>2</sup>');
+      infowindow.setContent(polygonArea);
       infowindow.open(map, editingPolygon);
       $('.confirm-button').removeClass('disabled').attr('disabled', false);
   });
